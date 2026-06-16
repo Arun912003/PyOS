@@ -1,8 +1,24 @@
+# Python
 __pycache__/
 *.pyc
 
+# Virtual Environment
+backend/venv/
+
+# Django
+db.sqlite3
+
+# React / Node
+frontend/node_modules/
+
+# Environment Variables
+.env
+
+# Mac
 .DS_Store
 
+# VS Code
 .vscode/
 
+# Phase 1 Runtime Data
 data/*.json
