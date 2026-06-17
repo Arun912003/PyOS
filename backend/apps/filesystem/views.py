@@ -7,10 +7,22 @@ from .serializers import DirectorySerializer
 from .services import DirectoryService
 from .serializers import FileSerializer
 from .services import FileService
+from apps.history.services import HistoryService
+from apps.logs.services import (
+    LogService
+)
+
+from apps.recyclebin.services import (
+    RecycleBinService
+)
 from .models import(
     Directory,
     File
 ) 
+
+from apps.history.services import (
+    HistoryService
+)
 
 
 class DirectoryCreateView(APIView):
@@ -28,11 +40,22 @@ class DirectoryCreateView(APIView):
         if serializer.is_valid():
 
             directory = DirectoryService.create_directory(
+
+                
                 name=serializer.validated_data["name"],
                 owner=request.user,
                 parent=serializer.validated_data.get(
                     "parent"
                 )
+            )
+            HistoryService.log_command(
+                    request.user,
+                    f"mkdir {directory.name}"
+                )
+            
+            LogService.log_action(
+                request.user,
+                f"Created directory {directory.name}"
             )
 
             return Response(
@@ -68,6 +91,16 @@ class DirectoryListView(APIView):
             many=True
         )
 
+        HistoryService.log_command(
+            request.user,
+            "ls"
+        )
+
+        LogService.log_action(
+            request.user,
+            "Listed directories"
+        )
+
         return Response(
             serializer.data
         )
@@ -84,12 +117,29 @@ class DirectoryRenameView(APIView):
         directory_id
     ):
 
+        directory = Directory.objects.get(
+            id=directory_id,
+            owner=request.user
+        )
+
+        old_name = directory.name
+
         directory = (
             DirectoryService.rename_directory(
                 directory_id=directory_id,
                 new_name=request.data["name"],
                 owner=request.user
             )
+        )
+
+        HistoryService.log_command(
+            request.user,
+            f"rename {old_name} -> {directory.name}"
+        )
+
+        LogService.log_action(
+            request.user,
+            f"Renamed directory {old_name} to {directory.name}"
         )
 
         return Response(
@@ -111,9 +161,26 @@ class DirectoryDeleteView(APIView):
         directory_id
     ):
 
+        directory = Directory.objects.get(
+            id=directory_id,
+            owner=request.user
+        )
+
+        directory_name = directory.name
+
         DirectoryService.delete_directory(
             directory_id=directory_id,
             owner=request.user
+        )
+
+        HistoryService.log_command(
+            request.user,
+            f"rmdir {directory_name}"
+        )
+
+        LogService.log_action(
+            request.user,
+            f"Deleted directory {directory_name}"
         )
 
         return Response(
@@ -141,6 +208,16 @@ class FileCreateView(APIView):
                 name=serializer.validated_data["name"],
                 directory=serializer.validated_data["directory"],
                 owner=request.user
+            )
+
+            HistoryService.log_command(
+                request.user,
+                f"create {file.name}"
+            )
+
+            LogService.log_action(
+                request.user,
+                f"Created file {file.name}"
             )
 
             return Response(
@@ -173,6 +250,16 @@ class FileReadView(APIView):
             owner=request.user
         )
 
+        HistoryService.log_command(
+            request.user,
+            f"read {file.name}"
+        )
+
+        LogService.log_action(
+            request.user,
+            f"Read file {file.name}"
+        )
+
         serializer = FileSerializer(
             file
         )
@@ -199,6 +286,16 @@ class FileWriteView(APIView):
             content=request.data["content"]
         )
 
+        HistoryService.log_command(
+            request.user,
+            f"write {file.name}"
+        )
+
+        LogService.log_action(
+            request.user,
+            f"Updated file {file.name}"
+        )
+
         return Response(
             {
                 "message":
@@ -218,9 +315,30 @@ class FileDeleteView(APIView):
         file_id
     ):
 
+        file = FileService.get_file(
+            file_id=file_id,
+            owner=request.user
+        )
+
+        file_name = file.name
+
+        RecycleBinService.move_to_recycle_bin(
+            file
+        )
+
         FileService.delete_file(
             file_id=file_id,
             owner=request.user
+        )
+
+        HistoryService.log_command(
+            request.user,
+            f"delete {file_name}"
+        )
+
+        LogService.log_action(
+            request.user,
+            f"Deleted file {file_name}"
         )
 
         return Response(
@@ -248,6 +366,16 @@ class FilePermissionView(APIView):
             permission=request.data["permission"]
         )
 
+        HistoryService.log_command(
+            request.user,
+            f"chmod {file.name}"
+        )
+
+        LogService.log_action(
+            request.user,
+            f"Changed permission of {file.name}"
+        )
+
         return Response(
             {
                 "message":
@@ -270,6 +398,15 @@ class FileInfoView(APIView):
         file = FileService.get_file(
             file_id=file_id,
             owner=request.user
+        )
+        HistoryService.log_command(
+            request.user,
+            f"fileinfo {file.name}"
+        )
+
+        LogService.log_action(
+            request.user,
+            f"Viewed file info for {file.name}"
         )
 
         return Response(
@@ -304,6 +441,15 @@ class FileMoveView(APIView):
             owner=request.user,
             directory=directory
         )
+        HistoryService.log_command(
+            request.user,
+            f"move {file.name}"
+        )
+
+        LogService.log_action(
+            request.user,
+            f"Moved file {file.name}"
+        ) 
 
         return Response(
             {
@@ -330,6 +476,16 @@ class FileCopyView(APIView):
             new_name=request.data["name"]
         )
 
+        HistoryService.log_command(
+            request.user,
+            f"copy {file.name}"
+        )
+
+        LogService.log_action(
+            request.user,
+            f"Copied file {file.name}"
+        )
+
         return Response(
             {
                 "id": file.id,
@@ -352,6 +508,16 @@ class TreeView(APIView):
 
         files = File.objects.filter(
             owner=request.user
+        )
+
+        HistoryService.log_command(
+            request.user,
+            "tree"
+        )
+
+        LogService.log_action(
+            request.user,
+            "Viewed filesystem tree"
         )
 
         return Response(

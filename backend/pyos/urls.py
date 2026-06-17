@@ -32,4 +32,19 @@ urlpatterns = [
     "api/filesystem/",
     include("apps.filesystem.urls")
     ),
+
+    path(
+    "api/history/",
+    include("apps.history.urls")
+    ),
+
+    path(
+    "api/logs/",
+    include("apps.logs.urls")
+    ),
+
+    path(
+    "api/recyclebin/",
+    include("apps.recyclebin.urls")
+    ),
 ]
