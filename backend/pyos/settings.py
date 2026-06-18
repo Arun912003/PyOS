@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "apps.history.apps.HistoryConfig",
     "apps.logs.apps.LogsConfig",
     "apps.recyclebin.apps.RecyclebinConfig",
+    "apps.search",
 ]
 
 MIDDLEWARE = [

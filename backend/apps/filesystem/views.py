@@ -23,6 +23,14 @@ from .models import(
 from apps.history.services import (
     HistoryService
 )
+from apps.filesystem.models import (
+    File,
+    Directory
+)
+
+from apps.recyclebin.models import (
+    RecycleBin
+)
 
 
 class DirectoryCreateView(APIView):
@@ -527,5 +535,42 @@ class TreeView(APIView):
 
                 "files":
                 [f.name for f in files]
+            }
+        )
+    
+class DiskInfoView(APIView):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get(self, request):
+
+        HistoryService.log_command(
+            request.user,
+            "diskinfo"
+        )
+
+        LogService.log_action(
+            request.user,
+            "Viewed disk information"
+        )
+
+        return Response(
+            {
+                "directories":
+                    Directory.objects.filter(
+                        owner=request.user
+                    ).count(),
+
+                "files":
+                    File.objects.filter(
+                        owner=request.user
+                    ).count(),
+
+                "recycle_bin":
+                    RecycleBin.objects.filter(
+                        user=request.user
+                    ).count()
             }
         )

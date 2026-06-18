@@ -8,6 +8,14 @@ from rest_framework.permissions import IsAuthenticated
 from .models import User
 from .serializers import UserSerializer
 
+from apps.history.services import (
+    HistoryService
+)
+
+from apps.logs.services import (
+    LogService
+)
+
 class RegisterView(APIView):
 
     def post(self, request):
@@ -48,4 +56,92 @@ class ProfileView(APIView):
 
         return Response(
             serializer.data
+        )
+    
+class ListUsersView(APIView):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get(self, request):
+
+        users = User.objects.all()
+
+        serializer = UserSerializer(
+            users,
+            many=True
+        )
+
+        return Response(
+            serializer.data
+        )
+    
+class LogoutView(APIView):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def post(self, request):
+
+        return Response(
+            {
+                "message":
+                "Logged out successfully"
+            }
+        )
+    
+class HelpView(APIView):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get(self, request):
+
+        HistoryService.log_command(
+            request.user,
+            "help"
+        )
+
+        LogService.log_action(
+            request.user,
+            "Viewed help"
+        )
+
+        return Response(
+            {
+                "commands": [
+
+                    "mkdir",
+                    "ls",
+                    "rename",
+                    "rmdir",
+
+                    "create",
+                    "read",
+                    "write",
+                    "delete",
+
+                    "chmod",
+                    "move",
+                    "copy",
+                    "tree",
+                    "fileinfo",
+
+                    "search",
+
+                    "history",
+                    "logs",
+
+                    "recyclebin",
+
+                    "whoami",
+                    "listusers",
+                    "logout",
+
+                    "diskinfo"
+                ]
+            }
         )

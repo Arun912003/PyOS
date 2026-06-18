@@ -2,7 +2,10 @@ from django.urls import path
 
 from .views import (
     RegisterView,
-    ProfileView
+    ProfileView,
+    ListUsersView,
+    LogoutView,
+    HelpView
 )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -34,5 +37,28 @@ urlpatterns = [
     "me/",
     ProfileView.as_view(),
     name="profile"
+    ),
+
+    path(
+    "whoami/",
+    ProfileView.as_view(),
+    name="whoami"
+    ),
+    path(
+    "list/",
+    ListUsersView.as_view(),
+    name="list-users"
+    ),
+
+    path(
+    "logout/",
+    LogoutView.as_view(),
+    name="logout"
+    ),
+
+    path(
+    "help/",
+    HelpView.as_view(),
+    name="help"
     ),
 ]

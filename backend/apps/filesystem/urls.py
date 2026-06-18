@@ -13,7 +13,8 @@ from .views import (
     FileInfoView,
     FileMoveView,
     FileCopyView,
-    TreeView
+    TreeView,
+    DiskInfoView
 )
 
 urlpatterns = [
@@ -90,5 +91,10 @@ urlpatterns = [
     "tree/",
     TreeView.as_view(),
     name="tree"
+    ),
+    path(
+    "diskinfo/",
+    DiskInfoView.as_view(),
+    name="diskinfo"
     ),
 ]

@@ -47,4 +47,9 @@ urlpatterns = [
     "api/recyclebin/",
     include("apps.recyclebin.urls")
     ),
+
+    path(
+    "api/search/",
+    include("apps.search.urls")
+    ),
 ]
