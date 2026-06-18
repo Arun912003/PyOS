@@ -14,7 +14,9 @@ from .views import (
     FileMoveView,
     FileCopyView,
     TreeView,
-    DiskInfoView
+    DiskInfoView,
+    PwdView,
+    CdView
 )
 
 urlpatterns = [
@@ -96,5 +98,17 @@ urlpatterns = [
     "diskinfo/",
     DiskInfoView.as_view(),
     name="diskinfo"
+    ),
+
+    path(
+    "pwd/",
+    PwdView.as_view(),
+    name="pwd"
+    ),
+
+    path(
+    "cd/",
+    CdView.as_view(),
+    name="cd"
     ),
 ]

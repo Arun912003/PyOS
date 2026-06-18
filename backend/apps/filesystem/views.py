@@ -574,3 +574,140 @@ class DiskInfoView(APIView):
                     ).count()
             }
         )
+    
+class PwdView(APIView):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get(self, request):
+
+        directory = (
+            request.user.current_directory
+        )
+
+        if not directory:
+
+            path = "root"
+
+        else:
+
+            parts = []
+
+            current = directory
+
+            while current:
+
+                parts.append(
+                    current.name
+                )
+
+                current = current.parent
+
+            parts.reverse()
+
+            path = (
+                "root/" +
+                "/".join(parts)
+            )
+
+        HistoryService.log_command(
+            request.user,
+            "pwd"
+        )
+
+        LogService.log_action(
+            request.user,
+            f"Viewed path {path}"
+        )
+
+        return Response(
+            {
+                "path": path
+            }
+        )
+    
+class CdView(APIView):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def post(self, request):
+
+        target = request.data.get(
+            "directory"
+        )
+
+        current = (
+            request.user.current_directory
+        )
+
+        if target == "..":
+
+            if current:
+
+                request.user.current_directory = (
+                    current.parent
+                )
+
+                request.user.save()
+
+            HistoryService.log_command(
+                request.user,
+                "cd .."
+            )
+
+            LogService.log_action(
+                request.user,
+                "Changed directory"
+            )
+
+            return Response(
+                {
+                    "message":
+                    "Directory changed"
+                }
+            )
+
+        directory = (
+            Directory.objects.filter(
+                owner=request.user,
+                name=target,
+                parent=current
+            ).first()
+        )
+
+        if not directory:
+
+            return Response(
+                {
+                    "error":
+                    "Directory not found"
+                },
+                status=404
+            )
+
+        request.user.current_directory = (
+            directory
+        )
+
+        request.user.save()
+
+        HistoryService.log_command(
+            request.user,
+            f"cd {target}"
+        )
+
+        LogService.log_action(
+            request.user,
+            f"Changed directory to {target}"
+        )
+
+        return Response(
+            {
+                "message":
+                "Directory changed"
+            }
+        )

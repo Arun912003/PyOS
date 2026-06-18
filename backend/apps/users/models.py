@@ -15,6 +15,14 @@ class User(AbstractUser):
         default="USER"
     )
 
+    current_directory = models.ForeignKey(
+        "filesystem.Directory",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="active_users"
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True
     )
