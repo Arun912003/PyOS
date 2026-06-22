@@ -18,19 +18,38 @@ class SearchService:
             owner =user
         ).filter(
             Q(name__icontains=query) |
-            Q(content__icontains=query)
+            Q(content__icontains=query) |
+            Q(directory__name__icontains=query)
+
         )
 
-        directories = Directory.objects.filter(
+        matched_directories = Directory.objects.filter(
             owner=user,
             name__icontains=query
         )
+
+        file_directories = Directory.objects.filter(
+            id__in=files.values_list(
+            "directory_id",
+            flat=True
+            )
+        )
+
+        directories = (
+            matched_directories |
+            file_directories
+        ).distinct()
 
         return {
             "files": [
                 {
                     "id": file.id,
-                    "name": file.name
+                    "name": file.name,
+                    "directory": (
+                        file.directory.name
+                        if file.directory
+                        else "root"
+                    )
                 }
                 for file in files
             ],

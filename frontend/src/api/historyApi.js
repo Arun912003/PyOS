@@ -1,0 +1,20 @@
+import api from "./axios";
+
+export const getHistory = async () => {
+
+  const token =
+    localStorage.getItem("access");
+
+  const response =
+    await api.get(
+      "/history/",
+      {
+        headers: {
+          Authorization:
+            `Bearer ${token}`
+        }
+      }
+    );
+
+  return response.data;
+};

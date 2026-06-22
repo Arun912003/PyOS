@@ -16,7 +16,9 @@ from .views import (
     TreeView,
     DiskInfoView,
     PwdView,
-    CdView
+    CdView,
+    FileListView,
+    FileRenameView
 )
 
 urlpatterns = [
@@ -67,10 +69,21 @@ urlpatterns = [
     ),
 
     path(
+    "files/<int:file_id>/rename/",
+    FileRenameView.as_view()
+),
+
+    path(
     "files/<int:file_id>/permission/",
     FilePermissionView.as_view(),
     name="change-permission"
     ),
+
+    path(
+    "files/list/",
+    FileListView.as_view(),
+    name="list-files"
+),
 
     path(
     "files/<int:file_id>/info/",

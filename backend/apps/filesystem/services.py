@@ -19,12 +19,14 @@ class DirectoryService:
 
         return directory
     
+    
     @staticmethod
     def list_directories(owner):
 
         return Directory.objects.filter(
-        owner=owner
-    )
+            owner=owner,
+            parent=owner.current_directory
+        )
 
     @staticmethod
     def rename_directory(
@@ -59,6 +61,14 @@ class DirectoryService:
 
 
 class FileService:
+
+    @staticmethod
+    def list_files(owner):
+
+        return File.objects.filter(
+            owner=owner,
+            directory=owner.current_directory
+        )
 
     @staticmethod
     def create_file(
@@ -116,6 +126,24 @@ class FileService:
         )
 
         file.delete()
+
+    @staticmethod
+    def rename_file(
+        file_id,
+        owner,
+        new_name
+    ):
+
+        file = File.objects.get(
+            id=file_id,
+            owner=owner
+        )
+
+        file.name = new_name
+
+        file.save()
+
+        return file
 
     @staticmethod
     def change_permission(

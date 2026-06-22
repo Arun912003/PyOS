@@ -48,13 +48,9 @@ class DirectoryCreateView(APIView):
         if serializer.is_valid():
 
             directory = DirectoryService.create_directory(
-
-                
                 name=serializer.validated_data["name"],
                 owner=request.user,
-                parent=serializer.validated_data.get(
-                    "parent"
-                )
+                parent=request.user.current_directory
             )
             HistoryService.log_command(
                     request.user,
@@ -124,6 +120,7 @@ class DirectoryRenameView(APIView):
         request,
         directory_id
     ):
+        
 
         directory = Directory.objects.get(
             id=directory_id,
@@ -207,14 +204,15 @@ class FileCreateView(APIView):
     def post(self, request):
 
         serializer = FileSerializer(
-            data=request.data
+            data=request.data,
+            partial =True
         )
 
         if serializer.is_valid():
 
             file = FileService.create_file(
                 name=serializer.validated_data["name"],
-                directory=serializer.validated_data["directory"],
+                directory=request.user.current_directory,
                 owner=request.user
             )
 
@@ -356,6 +354,48 @@ class FileDeleteView(APIView):
             }
         )
     
+class FileRenameView(APIView):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def patch(
+        self,
+        request,
+        file_id
+    ):
+
+        file = File.objects.get(
+            id=file_id,
+            owner=request.user
+        )
+
+        old_name = file.name
+
+        file = FileService.rename_file(
+            file_id=file_id,
+            owner=request.user,
+            new_name=request.data["name"]
+        )
+
+        HistoryService.log_command(
+            request.user,
+            f"rename {old_name} -> {file.name}"
+        )
+
+        LogService.log_action(
+            request.user,
+            f"Renamed file {old_name} to {file.name}"
+        )
+
+        return Response(
+            {
+                "message":
+                "File renamed successfully"
+            }
+        )
+    
 class FilePermissionView(APIView):
 
     permission_classes = [
@@ -389,6 +429,27 @@ class FilePermissionView(APIView):
                 "message":
                 "Permission updated successfully"
             }
+        )
+    
+class FileListView(APIView):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def get(self, request):
+
+        files = FileService.list_files(
+            request.user
+        )
+
+        serializer = FileSerializer(
+            files,
+            many=True
+        )
+
+        return Response(
+            serializer.data
         )
     
 class FileInfoView(APIView):
@@ -444,7 +505,7 @@ class FileMoveView(APIView):
             id=request.data["directory"]
         )
 
-        FileService.move_file(
+        file = FileService.move_file(
             file_id=file_id,
             owner=request.user,
             directory=directory
